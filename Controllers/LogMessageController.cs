@@ -37,15 +37,9 @@ namespace LogProxyAPI.Controllers
         {
             var response = await _clientAirTableAPI.GetAsync("https://api.airtable.com/v0/appD1b1YjWoXkUJwR/Messages?maxRecords=3&view=Grid%20view");
             var jstring = response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().Result;
-            var jobject = JsonSerializer.Deserialize<RecordsRoot>(jstring, LogMessageBase.JsonSerializerOptions);
+            var jobject = JsonSerializer.Deserialize<RecordsRoot>(jstring, LogMessageAbstract.JsonSerializerOptions);
             return jobject?.Records?
-                .Select(x => new LogMessageProxy()
-                {
-                    Id = x.LogMessage.Id,
-                    Message = x.LogMessage.Message,
-                    ReceivedAt = x.LogMessage.ReceivedAt,
-                    Summary = x.LogMessage.Summary
-                });
+                .Select(x => (LogMessageProxy)x.LogMessage);         
         }
 
         [HttpPost]
@@ -53,20 +47,14 @@ namespace LogProxyAPI.Controllers
         {
             try
             {
-                LogMessageBase logMessage = new LogMessageBase()
-                {
-                    Id = IdHandler.GetNextId(),
-                    Message = logMessageProxy.Message,
-                    Summary = logMessageProxy.Summary,
-                    ReceivedAt = DateTime.Now
-                };
-
+                logMessageProxy.Id = IdHandler.GetNextId();
+                logMessageProxy.ReceivedAt = DateTime.Now;
                 var record = new RecordsRoot()
                 {
-                    Records = new Record[1] { new Record() { LogMessage = logMessage } }
+                    Records = new Record[1] { new Record() { LogMessage = logMessageProxy } }
                 };
 
-                HttpContent content = new StringContent(JsonSerializer.Serialize(record, LogMessageBase.JsonSerializerOptions), Encoding.UTF8, "application/json");
+                HttpContent content = new StringContent(JsonSerializer.Serialize(record, LogMessageExternal.JsonSerializerOptions), Encoding.UTF8, "application/json");
                 var response = await _clientAirTableAPI.PostAsync("https://api.airtable.com/v0/appD1b1YjWoXkUJwR/Messages", content);
 
                 return Ok(response.EnsureSuccessStatusCode().Content.ReadAsStringAsync().Result);

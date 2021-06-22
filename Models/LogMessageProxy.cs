@@ -6,12 +6,23 @@ using System.Threading.Tasks;
 
 namespace LogProxyAPI.Models
 {
-    public class LogMessageProxy : LogMessageBase
+    public class LogMessageProxy : LogMessageAbstract
     {
-         [JsonPropertyName("Title")]
-        public new string Summary { get; set; }
+        [JsonPropertyName("Title")]
+        public string Title { get; set; }
 
-         [JsonPropertyName("Text")]
-        public new string Message { get; set; }
+        [JsonPropertyName("Text")]
+        public string Text { get; set; }
+       
+        public static implicit operator LogMessageProxy(LogMessageExternal logMessageExternal)
+        {
+            return new LogMessageProxy()
+            {
+                Id = logMessageExternal.Id,
+                Title = logMessageExternal.Summary,
+                Text = logMessageExternal.Message,
+                ReceivedAt = logMessageExternal.ReceivedAt
+            };
+        } 
     }
 }

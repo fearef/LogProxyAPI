@@ -20,7 +20,7 @@ namespace LogProxyAPI.Models
         public string Id { get; set; }
 
         [JsonPropertyName("fields")]
-        public LogMessageBase LogMessage { get; set; }
+        public LogMessageExternal LogMessage { get; set; }
 
         [JsonIgnore]
         public DateTime CreatedTime { get; set; }
